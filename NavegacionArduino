@@ -23,12 +23,53 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //Modo Búsqueda
   
+  //Modo Búsqueda
+  Busqueda:
+  while(objP == 3){   //si no se detectan pelotas
+    giroDer();        //girar derecha
+    lecSens();        //leer sensores
+  }
+  while(objP == 1){   //Pelota a la derecha
+    giroDer();        //girar derecha
+    lecSens();        //leer sensores     
+  }
+  while(objP == 2){   //Pelota a la izquierda
+    giroIzq();        //girar izquierda
+    lecSens();        //leer sensores 
+  }
+  while(obj == 0){    //Pelota centrada
+    adelante()        //Avanzar hacia adelante
+    lecSens();        //leer sensores 
+  }
 
   //Módo navegación
 
 
   //Modo Obstáculos
+  
+}
+
+void lecSens(){
+  
+}
+
+void giroDer(){
+  
+}
+
+void giroIzq(){
+  
+}
+
+void adelante(){
+  
+}
+
+void atras(){
+
+}
+
+void detener(){
   
 }
