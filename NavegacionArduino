@@ -1,0 +1,34 @@
+//Entradas
+//#define CanalCamara
+//#define ObsAdel
+//#define ObsAtr
+//#define ObsDer
+//#define ObsIzq
+
+//Salidas
+//#define MotD 
+//#define MotI
+
+
+// varaibles globales
+int obs;        //Obstaculos
+int objP;       //Posición de la pelota
+int limC;       //Detección de límite de cancha
+
+void setup() {
+  // put your setup code here, to run once:
+  //  Entradas
+  
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  //Modo Búsqueda
+  
+
+  //Módo navegación
+
+
+  //Modo Obstáculos
+  
+}
