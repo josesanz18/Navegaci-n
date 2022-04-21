@@ -26,28 +26,45 @@ void loop() {
   
   //Modo Búsqueda
   Busqueda:
-  while(objP == 3){   //si no se detectan pelotas
-    giroDer();        //girar derecha
-    lecSens();        //leer sensores
-  }
-  while(objP == 1){   //Pelota a la derecha
-    giroDer();        //girar derecha
-    lecSens();        //leer sensores     
-  }
-  while(objP == 2){   //Pelota a la izquierda
-    giroIzq();        //girar izquierda
-    lecSens();        //leer sensores 
-  }
-  while(obj == 0){    //Pelota centrada
-    adelante()        //Avanzar hacia adelante
-    lecSens();        //leer sensores 
-  }
+    while(objP == 3){   //si no se detectan pelotas
+      giroDer();        //girar derecha
+      lecSens();        //leer sensores
+    }
+    while(objP == 1){   //Pelota a la derecha
+      giroDer();        //girar derecha
+      lecSens();        //leer sensores     
+    }
+    while(objP == 2){   //Pelota a la izquierda
+      giroIzq();        //girar izquierda
+      lecSens();        //leer sensores 
+    }
+    if(objP == 0){    //Pelota centrada
+      goto Navegacion;
+    }
 
   //Módo navegación
-
+  Navegacion:
+    lecSens();        //leer sensores
+    adelante();       //Avanzar hacia adelante
 
   //Modo Obstáculos
-  
+  Obstaculos:
+    if(obs == 1){     //Obstáculo a la derecha
+      giroIzq();      //girar izquierda
+      lecSens();      //leer sensores
+    }
+    if(obs == 2){     //Obstáculo a la izquierda
+      giroIzq();      //girar derecha
+      lecSens();      //leer sensores
+    }
+    if(obs == 3){     //Obstáculo al frente
+      giroDer();      //girar derecha
+      lecSens();      //leer sensores
+    }
+    if(obs == 4){     //Obstáculo a la derecha
+      giroDer();      //girar derecha
+      lecSens();      //leer sensores
+    }
 }
 
 void lecSens(){
