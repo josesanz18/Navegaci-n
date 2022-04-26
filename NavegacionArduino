@@ -13,7 +13,7 @@
 // varaibles globales
 int obs;        //Obstaculos
 int objP;       //Posición de la pelota
-int limC;       //Detección de límite de cancha
+boolean limC = false;       //Detección de límite de cancha
 
 void setup() {
   // put your setup code here, to run once:
@@ -27,16 +27,16 @@ void loop() {
   //Modo Búsqueda
   Busqueda:
     while(objP == 3){   //si no se detectan pelotas
-      giroDer();        //girar derecha
-      lecSens();        //leer sensores
+      goto giroDer;        //girar derecha
+      goto lecSens;        //leer sensores
     }
     while(objP == 1){   //Pelota a la derecha
-      giroDer();        //girar derecha
-      lecSens();        //leer sensores     
+      goto giroDer;        //girar derecha
+      goto lecSens;        //leer sensores     
     }
     while(objP == 2){   //Pelota a la izquierda
-      giroIzq();        //girar izquierda
-      lecSens();        //leer sensores 
+      goto giroIzq;        //girar izquierda
+      goto lecSens;        //leer sensores 
     }
     if(objP == 0){    //Pelota centrada
       goto Navegacion;
@@ -44,49 +44,48 @@ void loop() {
 
   //Módo navegación
   Navegacion:
-    lecSens();        //leer sensores
-    adelante();       //Avanzar hacia adelante
+    goto lecSens;      //leer sensores
+    goto adelante;       //Avanzar hacia adelante
 
   //Modo Obstáculos
   Obstaculos:
     if(obs == 1){     //Obstáculo a la derecha
-      giroIzq();      //girar izquierda
-      lecSens();      //leer sensores
+      goto giroIzq;      //girar izquierda
+      goto lecSens;      //leer sensores
     }
     if(obs == 2){     //Obstáculo a la izquierda
-      giroIzq();      //girar derecha
-      lecSens();      //leer sensores
+      goto giroIzq;      //girar derecha
+      goto lecSens;      //leer sensores
     }
     if(obs == 3){     //Obstáculo al frente
-      giroDer();      //girar derecha
-      lecSens();      //leer sensores
+      goto giroDer;      //girar derecha
+      goto lecSens;      //leer sensores
     }
     if(obs == 4){     //Obstáculo a la derecha
-      giroDer();      //girar derecha
-      lecSens();      //leer sensores
+      goto giroDer;      //girar derecha
+      goto lecSens;      //leer sensores
     }
-}
+    if(limC){
+      goto atras;
+      goto giroIzq;
+      goto lecSens;
+      goto Busqueda;
+    }
 
-void lecSens(){
+  lecSens:
+    if(limC || (obs =! 0)){
+      goto Obstaculos;
+    }
+
+  giroDer:
   
-}
-
-void giroDer(){
+  giroIzq:
+    
+  adelante:  
   
-}
-
-void giroIzq(){
+  atras:
   
-}
-
-void adelante(){
+  detener:
   
-}
 
-void atras(){
-
-}
-
-void detener(){
-  
 }
