@@ -6,9 +6,10 @@
 //#define ObsIzq
 
 //Salidas
-//#define MotD 
-//#define MotI
-
+#define MotD1  22
+#define MotD2  23
+#define MotI1  24
+#define MotI2  25
 
 // varaibles globales
 int obs;                    //Obstaculos
@@ -19,7 +20,11 @@ boolean Nav = false;        //Bandera de Navegacion
 void setup() {
   // put your setup code here, to run once:
   //  Entradas
-  
+  //Salidas
+  pinMode(MotD1,OUTPUT);
+  pinMode(MotD2,OUTPUT);
+  pinMode(MotI1,OUTPUT);
+  pinMode(MotI2,OUTPUT);
 }
 
 void loop() {
@@ -28,12 +33,13 @@ void loop() {
   //Modo Búsqueda
   Busqueda:
     Nav = false;
-    goto lecSens();
+    goto lecSens;
     if(objP == 3){   //si no se detectan pelotas
       goto giroDer;        //girar derecha
       goto lecSens;        //leer sensores
     }
     else{
+      goto detener;
       Nav = true;
       goto Navegacion;      //Modo Navegacion
     }
@@ -56,42 +62,43 @@ void loop() {
 
   //Modo Obstáculos
   Obstaculos:
+    goto detener;
+    delay(250);
     if(obs == 1){         //Obstáculo a la derecha
       goto giroIzq;       //girar izquierda
       goto lecSens;       //leer sensores
+      return;
     }
     if(obs == 2){         //Obstáculo a la izquierda
       goto giroIzq;       //girar derecha
       goto lecSens;       //leer sensores
+      return;
     }
     if(obs == 3){         //Obstáculo al frente
       goto giroDer;       //girar derecha
       goto lecSens;       //leer sensores
+      return;
     }
     if(obs == 4){         //Obstáculo a la derecha
       goto giroDer;       //girar derecha
       goto lecSens;       //leer sensores
+      return;
     }
     if(limC){             //Detección del límite de cancha
       goto atras;         //Ir hacia atras
+      delay(1000);
       goto giroIzq;       //Girar izquierda
+      delay(1000);
       goto lecSens;       //leer sensores
-    }
-    if(Nav){
-      goto Navegacion;
-    }
-    else{
       return;
-    }
-    
-    
+    } 
 
   lecSens:
     if( Nav && (limC || obs == 1 || obs == 2 || obs ==3)){          //Si se encuentra un obstáculo a la derecha, izquierda o enfrente, o se determina el límite de cancha mientras navega
       goto Obstaculos;
     }
     if( !Nav && (limC || obs != 0)){                                //Si no se encuentra navegando pero detecta límite de cancha
-      goto Obstáculos
+      goto Obstaculos;
     }
     if(objP == 3){                                                  //Si no se detectan pelotas
       goto Busqueda;
@@ -100,18 +107,39 @@ void loop() {
 
 //Estados de movimiento 
   giroDer:
+    digitalWrite(MotI1,HIGH);
+    digitalWrite(MotI2,LOW);
+    digitalWrite(MotD1,LOW);
+    digitalWrite(MotD2,HIGH);
     return;
   
   giroIzq:
+    digitalWrite(MotI1,LOW);
+    digitalWrite(MotI2,HIGH); 
+    digitalWrite(MotD1,HIGH);   
+    digitalWrite(MotD2,LOW);
+    
     return;
     
-  adelante:  
+  adelante:
+    digitalWrite(MotI1,HIGH);
+    digitalWrite(MotI2,LOW); 
+    digitalWrite(MotD1,HIGH);   
+    digitalWrite(MotD2,LOW);
     return;
     
   atras:
+    digitalWrite(MotI1,LOW);
+    digitalWrite(MotI2,HIGH); 
+    digitalWrite(MotD1,LOW);   
+    digitalWrite(MotD2,HIGH);
     return;
     
   detener:
+    digitalWrite(MotI1,LOW);
+    digitalWrite(MotI2,LOW); 
+    digitalWrite(MotD1,LOW);   
+    digitalWrite(MotD2,LOW);
     return;
     
 
