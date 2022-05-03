@@ -78,7 +78,7 @@ void loop() {
       return;
     }
     if(obs == 2){         //Obstáculo a la izquierda
-      goto giroIzq;       //girar derecha
+      goto giroDer;       //girar derecha
       goto lecSens;       //leer sensores
       return;
     }
@@ -87,7 +87,7 @@ void loop() {
       goto lecSens;       //leer sensores
       return;
     }
-    if(obs == 4){         //Obstáculo a la derecha
+    if(obs == 4){         //Obstáculo atrás
       goto giroDer;       //girar derecha
       goto lecSens;       //leer sensores
       return;
