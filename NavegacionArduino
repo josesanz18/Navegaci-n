@@ -6,20 +6,22 @@
 //#define ObsIzq
 
 //Salidas
-#define MotD1  22
-#define MotD2  23
-#define MotI1  24
-#define MotI2  25
+#define MotD1  22           //Terminal 1 de MotorDerecho
+#define MotD2  23           //Terminal 2 de MotorDerecho
+#define MotI1  24           //Terminal 1 de MotorIzquierdo
+#define MotI2  25           //Termianl 2 de MotorIzquierdo
 
 // varaibles globales
 int obs;                    //Obstaculos
 int objP;                   //Posición de la pelota
 boolean limC = false;       //Detección de límite de cancha
 boolean Nav = false;        //Bandera de Navegacion
+boolean evObs = false;      //Bandera de Evación de obstáculos
+short i;                    //Varaible Auxiliar
 
 void setup() {
   // put your setup code here, to run once:
-  //  Entradas
+  // Entradas
   //Salidas
   pinMode(MotD1,OUTPUT);
   pinMode(MotD2,OUTPUT);
@@ -32,38 +34,44 @@ void loop() {
   
   //Modo Búsqueda
   Busqueda:
-    Nav = false;
-    goto lecSens;
-    if(objP == 3){   //si no se detectan pelotas
-      goto giroDer;        //girar derecha
-      goto lecSens;        //leer sensores
+    Nav = false;                //bandera navegacion apagada
+    goto lecSens;               //leer sensores
+    if(objP == 3){              //si no se detectan pelotas
+      for(i=50;i>=0;i+=50){     //comportamiento giro en espiral
+        goto giroIzq;           //girar izquierda
+        delay(i);               //para controlar giro
+        goto adelante;           //avanzar
+        delay(i);               //para controlar avance
+        goto lecSens;           //leer sensores
+      }
     }
-    else{
-      goto detener;
-      Nav = true;
-      goto Navegacion;      //Modo Navegacion
+    else{                       //si se detectan pelotas
+      goto detener;             //detener avance
+      Nav = true;               //bandera de navegacion activa
+      goto Navegacion;          //Modo Navegacion
     }
     
 
   //Módo navegación
   Navegacion:
-    if(objP == 1){   //Pelota a la derecha
-      goto giroDer;        //girar derecha
-      goto lecSens;        //leer sensores     
+    if(objP == 1){          //Pelota a la derecha
+      goto giroDer;         //girar derecha
+      goto lecSens;         //leer sensores     
     }
-    if(objP == 2){   //Pelota a la izquierda
-      goto giroIzq;        //girar izquierda
-      goto lecSens;        //leer sensores 
+    if(objP == 2){          //Pelota a la izquierda
+      goto giroIzq;         //girar izquierda
+      goto lecSens;         //leer sensores 
     }
-    if(objP == 0){    //Pelota centrada
+    if(objP == 0){          //Pelota centrada
       goto lecSens;         //leer sensores
       goto adelante;        //Avanzar hacia adelante
     }
 
   //Modo Obstáculos
   Obstaculos:
-    goto detener;
-    delay(250);
+    evObs = true;         //bandera de evacion de obstaculos activa
+    goto detener;         //Detener motores
+    delay(250);           //Esperar pequeño tiempo, evita cambio de polaridad brusca en motores
     if(obs == 1){         //Obstáculo a la derecha
       goto giroIzq;       //girar izquierda
       goto lecSens;       //leer sensores
@@ -85,20 +93,27 @@ void loop() {
       return;
     }
     if(limC){             //Detección del límite de cancha
+      goto lecSens;
       goto atras;         //Ir hacia atras
-      delay(1000);
+      delay(1000);        //Control de retroceso
+      goto lecSens;       //leer sensores
       goto giroIzq;       //Girar izquierda
-      delay(1000);
+      delay(1000);        //control de giro Izquierdo
       goto lecSens;       //leer sensores
       return;
     } 
 
   lecSens:
-    if( Nav && (limC || obs == 1 || obs == 2 || obs ==3)){          //Si se encuentra un obstáculo a la derecha, izquierda o enfrente, o se determina el límite de cancha mientras navega
+    //Sección para asignar valores de los sensores y cuantizarlos
+    
+    if( Nav && (limC || obs ==3)){                                  //Si se encuentra un obstáculo enfrente, o se determina el límite de cancha mientras navega
       goto Obstaculos;
     }
-    if( !Nav && (limC || obs != 0)){                                //Si no se encuentra navegando pero detecta límite de cancha
+    if( evObs && (limC || obs != 0)){                               //Si se encuentra evadiendo Obtáculos
       goto Obstaculos;
+    }
+    if(!limC && obs == 0){
+      evObs == false;                                               //Bandera de evación de obstáculos desactivada
     }
     if(objP == 3){                                                  //Si no se detectan pelotas
       goto Busqueda;
