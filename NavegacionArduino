@@ -1,161 +1,162 @@
-//Entradas
-//#define CanalCamara
-//#define ObsAdel
-//#define ObsAtr
-//#define ObsDer
-//#define ObsIzq
+const int DIP1 = 2; //Interruptor 1 del DipSwitch
+const int DIP2 = 3; //Interruptor 2 del DipSwitch
+const int DIP3 = 4; //Interruptor 3 del DipSwitch
+const int DIP4 = 5; //Interruptor 4 del DipSwitch
 
-//Salidas
-#define MotD1  22           //Terminal 1 de MotorDerecho
-#define MotD2  23           //Terminal 2 de MotorDerecho
-#define MotI1  24           //Terminal 1 de MotorIzquierdo
-#define MotI2  25           //Termianl 2 de MotorIzquierdo
+const int pinENA = 6; // Permite el control del motor A
+const int pinIN1 = 7; // controla sentido del motor A
+const int pinIN2 = 8; // controla sentido del motor A
+const int pinIN3 = 9; // controla sentido del motor B
+const int pinIN4 = 10; // controla sentido del motor B
+const int pinENB = 11; // Permite el control del motor B
 
-// varaibles globales
-int obs;                    //Obstaculos
-int objP;                   //Posición de la pelota
-boolean limC = false;       //Detección de límite de cancha
-boolean Nav = false;        //Bandera de Navegacion
-boolean evObs = false;      //Bandera de Evación de obstáculos
-short i;                    //Varaible Auxiliar
+int velocidad=200;      //velocidad de giro
+
+const int pinMotorA[3] = { pinENA, pinIN1, pinIN2 };
+const int pinMotorB[3] = { pinENB, pinIN3, pinIN4 };
+
+int freno = 0;
+int movimiento = 0;
+int giro = 0;
+int espiral = 0;
 
 void setup() {
-  // put your setup code here, to run once:
-  // Entradas
-  //Salidas
-  pinMode(MotD1,OUTPUT);
-  pinMode(MotD2,OUTPUT);
-  pinMode(MotI1,OUTPUT);
-  pinMode(MotI2,OUTPUT);
+  Serial.begin(9600);   //iniciar puerto serie
+  pinMode(DIP1, INPUT); //definir DIP1 como entrada
+  pinMode(DIP2, INPUT); //definir DIP2 como entrada
+  pinMode(DIP3, INPUT); //definir DIP3 como entrada
+  pinMode(DIP4, INPUT); //definir DIP4 como entrada
+
+  pinMode(pinIN1, OUTPUT); //definir pinIN1 como salida
+  pinMode(pinIN2, OUTPUT); //definir pinIN2 como salida
+  pinMode(pinENA, OUTPUT); //definir pinENA como salida
+  pinMode(pinIN3, OUTPUT); //definir pinIN3 como salida
+  pinMode(pinIN4, OUTPUT); //definir pinIN4 como salida
+  pinMode(pinENB, OUTPUT); //definir pinENB como salida
+
+  
+}
+void loop(){
+  freno = digitalRead(DIP1);  //lectura digital de pin
+  movimiento = digitalRead(DIP2);  //lectura digital de pin
+  giro = digitalRead(DIP3);  //lectura digital de pin
+  espiral = digitalRead(DIP4);  //lectura digital de pin
+
+  int modo[4] = { freno, movimiento, giro, espiral}; //Agrupamos los valores en un arreglo
+
+  int estado = movimientoMotores(modo); //Emplemos el arreglo como argumento de la función movimientoMotores
+
+  switch(estado)
+  {
+    case 1:
+      //Freno activado
+      Serial.println("El freno está activo");
+      fullStop(pinMotorA, pinMotorB);
+      break;
+      
+    case 2:
+      //Movimiento hacia delante y hacia atrás
+      
+      Serial.println("El robot se mueve haca adelante y atrás");
+
+      velocidad = 200;
+      
+      moveForward(pinMotorA, velocidad);
+      moveForward(pinMotorB, velocidad);
+      
+      
+      break;
+      
+    case 3:
+      //Giro
+      Serial.println("El robot está girando");
+
+      giroDerecha(pinMotorA, pinMotorB);
+      delay(1000);
+      giroIzquierda(pinMotorA, pinMotorB);
+      delay(1000);
+      
+      break;
+
+    case 4:
+      //Espiral
+      Serial.println("El robot se mueve en espiral");
+      break;
+
+    default:
+      //Aqui no llega
+      break;
+  }
+  delay(1000);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+int movimientoMotores(int estado[4])
+{
+  int a;
+  if( estado[0] == 0)
+  {
+    a = 1; //Estado 1: Freno
+  }
+
+  else if( estado[0] == 1 && estado[1] == 1 && estado[2] == 0 && estado[3] == 0 )
+  {
+    a = 2; //Estado 2: Adelante-atrás
+  }
+
+  else if( estado[0] == 1 && estado[1] == 0 && estado[2] == 1 && estado[3] == 0 )
+  {
+    a = 3; // Estado3: Giro
+  }
+
+  else if( estado[0] == 1 && estado[1] == 0 && estado[2] == 0 && estado[3] == 1 )
+  {
+    a = 4; //Estado 4 : Espiral
+  }
+
+  else
+  {
+    a = 1; //Estado no definido, se obliga a frenar
+  }
+
+  return a;
   
-  //Modo Búsqueda
-  Busqueda:
-    Nav = false;                //bandera navegacion apagada
-    goto lecSens;               //leer sensores
-    if(objP == 3){              //si no se detectan pelotas
-      for(i=50;i>=0;i+=50){     //comportamiento giro en espiral
-        goto giroIzq;           //girar izquierda
-        delay(i);               //para controlar giro
-        goto adelante;           //avanzar
-        delay(i);               //para controlar avance
-        goto lecSens;           //leer sensores
-      }
-    }
-    else{                       //si se detectan pelotas
-      goto detener;             //detener avance
-      Nav = true;               //bandera de navegacion activa
-      goto Navegacion;          //Modo Navegacion
-    }
-    
+}
 
-  //Módo navegación
-  Navegacion:
-    if(objP == 1){          //Pelota a la derecha
-      goto giroDer;         //girar derecha
-      goto lecSens;         //leer sensores     
-    }
-    if(objP == 2){          //Pelota a la izquierda
-      goto giroIzq;         //girar izquierda
-      goto lecSens;         //leer sensores 
-    }
-    if(objP == 0){          //Pelota centrada
-      goto lecSens;         //leer sensores
-      goto adelante;        //Avanzar hacia adelante
-    }
+void fullStop(const int pinMotor1[3], const int pinMotor2[3])
+{
+   digitalWrite(pinMotor1[1], LOW);
+   digitalWrite(pinMotor1[2], LOW);
+   digitalWrite(pinMotor2[1], LOW);
+   digitalWrite(pinMotor2[2], LOW);
 
-  //Modo Obstáculos
-  Obstaculos:
-    evObs = true;         //bandera de evacion de obstaculos activa
-    goto detener;         //Detener motores
-    delay(250);           //Esperar pequeño tiempo, evita cambio de polaridad brusca en motores
-    if(obs == 1){         //Obstáculo a la derecha
-      goto giroIzq;       //girar izquierda
-      goto lecSens;       //leer sensores
-      return;
-    }
-    if(obs == 2){         //Obstáculo a la izquierda
-      goto giroDer;       //girar derecha
-      goto lecSens;       //leer sensores
-      return;
-    }
-    if(obs == 3){         //Obstáculo al frente
-      goto giroDer;       //girar derecha
-      goto lecSens;       //leer sensores
-      return;
-    }
-    if(obs == 4){         //Obstáculo atrás
-      goto giroDer;       //girar derecha
-      goto lecSens;       //leer sensores
-      return;
-    }
-    if(limC){             //Detección del límite de cancha
-      goto lecSens;
-      goto atras;         //Ir hacia atras
-      delay(1000);        //Control de retroceso
-      goto lecSens;       //leer sensores
-      goto giroIzq;       //Girar izquierda
-      delay(1000);        //control de giro Izquierdo
-      goto lecSens;       //leer sensores
-      return;
-    } 
+   analogWrite(pinMotor1[0], 0);
+   analogWrite(pinMotor2[0], 0);
+}
 
-  lecSens:
-    //Sección para asignar valores de los sensores y cuantizarlos
-    
-    if( Nav && (limC || obs ==3)){                                  //Si se encuentra un obstáculo enfrente, o se determina el límite de cancha mientras navega
-      goto Obstaculos;
-    }
-    if( evObs && (limC || obs != 0)){                               //Si se encuentra evadiendo Obtáculos
-      goto Obstaculos;
-    }
-    if(!limC && obs == 0){
-      evObs == false;                                               //Bandera de evación de obstáculos desactivada
-    }
-    if(objP == 3){                                                  //Si no se detectan pelotas
-      goto Busqueda;
-    }
-    return;
+void moveForward(const int pinMotor[3], int speed)
+{
+   digitalWrite(pinMotor[1], HIGH);
+   digitalWrite(pinMotor[2], LOW);
 
-//Estados de movimiento 
-  giroDer:
-    digitalWrite(MotI1,HIGH);
-    digitalWrite(MotI2,LOW);
-    digitalWrite(MotD1,LOW);
-    digitalWrite(MotD2,HIGH);
-    return;
-  
-  giroIzq:
-    digitalWrite(MotI1,LOW);
-    digitalWrite(MotI2,HIGH); 
-    digitalWrite(MotD1,HIGH);   
-    digitalWrite(MotD2,LOW);
-    
-    return;
-    
-  adelante:
-    digitalWrite(MotI1,HIGH);
-    digitalWrite(MotI2,LOW); 
-    digitalWrite(MotD1,HIGH);   
-    digitalWrite(MotD2,LOW);
-    return;
-    
-  atras:
-    digitalWrite(MotI1,LOW);
-    digitalWrite(MotI2,HIGH); 
-    digitalWrite(MotD1,LOW);   
-    digitalWrite(MotD2,HIGH);
-    return;
-    
-  detener:
-    digitalWrite(MotI1,LOW);
-    digitalWrite(MotI2,LOW); 
-    digitalWrite(MotD1,LOW);   
-    digitalWrite(MotD2,LOW);
-    return;
-    
+   analogWrite(pinMotor[0], speed);
+}
 
+void moveBackward(const int pinMotor[3], int speed)
+{
+   digitalWrite(pinMotor[1], LOW);
+   digitalWrite(pinMotor[2], HIGH);
+
+   analogWrite(pinMotor[0], speed);
+}
+
+void giroDerecha(const int pinMotor1[3], const int pinMotor2[3])
+{
+  moveForward(pinMotor1, 200);
+  moveBackward(pinMotor2, 100);
+}
+
+void giroIzquierda(const int pinMotor1[3], const int pinMotor2[3])
+{
+  moveForward(pinMotor1, 100);
+  moveBackward(pinMotor2, 200);
 }
