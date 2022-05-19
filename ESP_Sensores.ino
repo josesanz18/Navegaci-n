@@ -1,6 +1,6 @@
 //********************************Variables para Configuración AccessPoint*********************
 #include <WiFi.h>
-const char* ssid     = "ESP32-Access-Point-2";
+const char* ssid     = "ESP32-Access-Point";
 const char* password = "123456789";
 WiFiServer server(80);
 String header;
