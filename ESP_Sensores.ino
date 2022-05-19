@@ -74,17 +74,32 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   Serial.println("LOOP");
+  lecSens();
+  if((rva[0] == rvaExterior[0]) && (rva[1] == rvaExterior[1]) && (rva[2] == rvaExterior[2])){
+    limC = true;
+  }
+  else{
+    limC = false;
+  }
+  if( Nav && (limC || obs ==3)){                                  //Si se encuentra un obstáculo enfrente, o se determina el límite de cancha mientras navega
+    goto Obstaculos;
+  }
+  if( evObs && (limC || obs != 0)){                               //Si se encuentra evadiendo Obtáculos
+    goto Obstaculos;
+  }
+  if(!limC && obs == 0){
+    evObs == false;                                               //Bandera de evación de obstáculos desactivada
+  }
   //Modo Búsqueda
   Busqueda:
   Serial.println("Modo búsqueda");
-    Nav = false;                //bandera navegacion apagada
-    goto lecSens;               //leer sensores
+    Nav = false;             //bandera navegacion apagada
     if(objP == 3){              //si no se detectan pelotas
       Serial.println("Espiral");
       digitalWrite(TS0,LOW);      //girar espiral 1 0 0
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,HIGH);
-      goto Busqueda;                //leer sensores
+      return;                //leer sensores
       }
     else{                         //si se detectan pelotas
       digitalWrite(TS0,LOW);      //detener 0 0 0
@@ -93,7 +108,6 @@ void loop() {
       Nav = true;                 //bandera de navegacion activa
       goto Navegacion;            //Modo Navegacion
     }
-    
 
   //Módo navegación
   Navegacion:
@@ -103,23 +117,22 @@ void loop() {
       digitalWrite(TS0,HIGH);       //girar derecha 0 0 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,LOW);
-      goto lecSens;                 //leer sensores     
+      lecSens();                 //leer sensores     
     }
     if(objP == 2){                //Pelota a la izquierda
       Serial.print("Izquierda");
       digitalWrite(TS0,LOW);      //girar izquierda 0 1 0
       digitalWrite(TS1,HIGH);
       digitalWrite(TS2,LOW);
-      goto lecSens;               //leer sensores 
+      lecSens();               //leer sensores 
     }
     if(objP == 0){                //Pelota centrada
       Serial.print("Frente");
       digitalWrite(TS0,LOW);      //adelante 0 1 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,HIGH);
-      goto lecSens;               //leer sensores
+      lecSens();               //leer sensores
     }
-
   //Modo Obstáculos
   Obstaculos:
     Serial.println("Modo Obstáculos");
@@ -132,41 +145,42 @@ void loop() {
       digitalWrite(TS0,LOW);      //girar izquierda 0 1 0
       digitalWrite(TS1,HIGH);
       digitalWrite(TS2,LOW);
-      goto lecSens;               //leer sensores
+      lecSens();               //leer sensores
       return;
     }
     if(obs == 2){                 //Obstáculo a la izquierda
       digitalWrite(TS0,HIGH);       //girar derecha 0 0 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,LOW);
-      goto lecSens;               //leer sensores
+      lecSens();               //leer sensores
       return;
     }
     if(obs == 3){                 //Obstáculo al frente
       digitalWrite(TS0,HIGH);     //girar derecha 0 0 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,LOW);
-      goto lecSens;               //leer sensores
+      lecSens();               //leer sensores
       return;
     }
     /*if(obs == 4){                 //Obstáculo atrás
       digitalWrite(TS0,HIGH);       //girar derecha 0 0 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,LOW);
-      goto lecSens;                 //leer sensores
+      lecSens();                 //leer sensores
       return;
     }*/
     if(limC){                     //Detección del límite de cancha
-      goto lecSens;               //leer sensores
+      lecSens();               //leer sensores
       digitalWrite(TS0,LOW);      //girar izquierda 0 1 0
       digitalWrite(TS1,HIGH);
       digitalWrite(TS2,LOW);
       delay(1000);                //control de giro Izquierdo
-      goto lecSens;               //leer sensores
+      lecSens();               //leer sensores
       return;
     } 
+}
 
-  lecSens:
+void lecSens(){
     Serial.println("Leer Sensores");
     //Sección para asignar valores de los sensores y cuantizarlos
     objP = visionPelotas();                                                //Busca centro de pelota, 0-centro,1-derecha,2-izquierda, 3-sin objetivo
@@ -182,22 +196,6 @@ void loop() {
     Serial.print(Nav);
     Serial.print(" evObs: ");
     Serial.println(evObs);
-    if((rva[0] == rvaExterior[0]) && (rva[1] == rvaExterior[1]) && (rva[2] == rvaExterior[2])){
-      limC = true;
-    }
-    else{
-      limC = false;
-    }
-    if( Nav && (limC || obs ==3)){                                  //Si se encuentra un obstáculo enfrente, o se determina el límite de cancha mientras navega
-      goto Obstaculos;
-    }
-    if( evObs && (limC || obs != 0)){                               //Si se encuentra evadiendo Obtáculos
-      goto Obstaculos;
-    }
-    if(!limC && obs == 0){
-      evObs == false;                                               //Bandera de evación de obstáculos desactivada
-    }
-    return;
 }
 
 void accessPointInit(){
