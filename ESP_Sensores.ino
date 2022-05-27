@@ -12,22 +12,23 @@ String header;
 
 
 //Salidas
-#define   TS0   0          //Pines para enviar al Arduino Uno
-#define   TS1   2          //Pines para enviar al Arduino Uno
-#define   TS2   15           //Pines para enviar al Arduino Uno
+#define   TS0   4         //Pines para enviar al Arduino Uno
+#define   TS1   0          //Pines para enviar al Arduino Uno
+#define   TS2   2           //Pines para enviar al Arduino Uno
+#define   TS3   15
 
 //Detección de color
-#define S0 36         // S0 a pin 4
-#define S1 39         // S1 a pin 5
-#define S2 34         // S2 a pin 6
-#define S3 35         // S3 a pin 7
-#define salidaTCS 32  // salidaTCS a pin 8
+#define S0 32         // S0 a pin 4
+#define S1 33         // S1 a pin 5
+#define S2 25         // S2 a pin 6
+#define S3 26         // S3 a pin 7
+#define salidaTCS 27  // salidaTCS a pin 8
 
 // DECLARACION DE VARIABLES PARA PINES
 const int pe1 = 19;
 const int pe2 = 18;
 const int pe3 = 5;
-const int pintrigger = 4;
+const int pintrigger = 21;
 // VARIABLES PARA CALCULOS
 unsigned int distancia1, distancia2, distancia3;
 
@@ -41,7 +42,7 @@ short i;                    //Varaible Auxiliar
 
 //Variables detección de color
 int rva[3] = {0,0,0};
-int rvaExterior[3] = {0,0,0};
+int rvaExterior[3] = {87,67,38};
 
 void setup() {
   // put your setup code here, to run once:
@@ -56,6 +57,7 @@ void setup() {
   pinMode(TS0,OUTPUT);          //declarar como salida los pines de comunicación con el Arduino
   pinMode(TS1,OUTPUT);          //declarar como salida los pines de comunicación con el Arduino
   pinMode(TS2,OUTPUT);          //declarar como salida los pines de comunicación con el Arduino
+  pinMode(TS3,OUTPUT);
   pinMode(pintrigger, OUTPUT);  //pines Ultrasónico
 
   //Color
@@ -68,26 +70,23 @@ void setup() {
   digitalWrite(S1,LOW);         // del modulo al 20 por ciento
   
   accessPointInit();            //Inicializa el punto de acceso del ESP32
-  Serial.println("Término del setup");
+  //Serial.println("Término del setup");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  Serial.println("LOOP");
+  //Serial.println("LOOP");
   lecSens();
-  if((rva[0] == rvaExterior[0]) && (rva[1] == rvaExterior[1]) && (rva[2] == rvaExterior[2])){
-    limC = true;
-  }
-  else{
-    limC = false;
-  }
-  if( Nav && (limC || obs ==3)){                                  //Si se encuentra un obstáculo enfrente, o se determina el límite de cancha mientras navega
+  /*if( Nav && (limC || obs ==3)){                                  //Si se encuentra un obstáculo enfrente, o se determina el límite de cancha mientras navega
     goto Obstaculos;
   }
   if( evObs && (limC || obs != 0)){                               //Si se encuentra evadiendo Obtáculos
     goto Obstaculos;
+  }/*/
+  if(limC || obs!=0){
+    goto Obstaculos;
   }
-  if(!limC && obs == 0){
+  if(limC == 0 && obs == 0){
     evObs == false;                                               //Bandera de evación de obstáculos desactivada
   }
   //Modo Búsqueda
@@ -102,36 +101,39 @@ void loop() {
       return;                //leer sensores
       }
     else{                         //si se detectan pelotas
-      digitalWrite(TS0,LOW);      //detener 0 0 0
+      /*digitalWrite(TS0,LOW);      //detener 0 0 0
       digitalWrite(TS1,LOW);
-      digitalWrite(TS2,LOW);
+      digitalWrite(TS2,LOW);*/
       Nav = true;                 //bandera de navegacion activa
       goto Navegacion;            //Modo Navegacion
     }
 
   //Módo navegación
   Navegacion:
-    Serial.println("Modo Navegación");
+    Serial.print("Modo Navegación");
     if(objP == 1){                  //Pelota a la derecha
-      Serial.print("Derecha");
+      Serial.println("Derecha");
       digitalWrite(TS0,HIGH);       //girar derecha 0 0 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,LOW);
-      lecSens();                 //leer sensores     
+      digitalWrite(TS3,HIGH);
+      return;    
     }
     if(objP == 2){                //Pelota a la izquierda
-      Serial.print("Izquierda");
+      Serial.println("Izquierda");
       digitalWrite(TS0,LOW);      //girar izquierda 0 1 0
       digitalWrite(TS1,HIGH);
       digitalWrite(TS2,LOW);
-      lecSens();               //leer sensores 
+      digitalWrite(TS3,HIGH);
+      return;               //leer sensores 
     }
     if(objP == 0){                //Pelota centrada
-      Serial.print("Frente");
-      digitalWrite(TS0,LOW);      //adelante 0 1 1
-      digitalWrite(TS1,LOW);
-      digitalWrite(TS2,HIGH);
-      lecSens();               //leer sensores
+      Serial.println("Frente");
+      digitalWrite(TS0,HIGH);      //adelante 0 1 1
+      digitalWrite(TS1,HIGH);
+      digitalWrite(TS2,LOW);
+      digitalWrite(TS3,HIGH);
+      return;               //leer sensores
     }
   //Modo Obstáculos
   Obstaculos:
@@ -140,26 +142,35 @@ void loop() {
     digitalWrite(TS0,LOW);          //Detener motores 0 0 0
     digitalWrite(TS1,LOW);
     digitalWrite(TS2,LOW);
-    delay(250);                   //Esperar pequeño tiempo, evita cambio de polaridad brusca en motores
+    digitalWrite(TS3,HIGH);
+    delay(2000);
+    digitalWrite(TS0,HIGH);          //atras 1 1 1
+    digitalWrite(TS1,HIGH);
+    digitalWrite(TS2,HIGH);
+    digitalWrite(TS3,HIGH);
+    delay(2000);
     if(obs == 1){                 //Obstáculo a la derecha
       digitalWrite(TS0,LOW);      //girar izquierda 0 1 0
       digitalWrite(TS1,HIGH);
       digitalWrite(TS2,LOW);
-      lecSens();               //leer sensores
+      digitalWrite(TS3,HIGH);
+      delay(3000);
       return;
     }
     if(obs == 2){                 //Obstáculo a la izquierda
       digitalWrite(TS0,HIGH);       //girar derecha 0 0 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,LOW);
-      lecSens();               //leer sensores
+      digitalWrite(TS3,HIGH);
+      delay(3000);
       return;
     }
     if(obs == 3){                 //Obstáculo al frente
       digitalWrite(TS0,HIGH);     //girar derecha 0 0 1
       digitalWrite(TS1,LOW);
       digitalWrite(TS2,LOW);
-      lecSens();               //leer sensores
+      digitalWrite(TS3,HIGH);
+      delay(3000);
       return;
     }
     /*if(obs == 4){                 //Obstáculo atrás
@@ -170,32 +181,48 @@ void loop() {
       return;
     }*/
     if(limC){                     //Detección del límite de cancha
-      lecSens();               //leer sensores
       digitalWrite(TS0,LOW);      //girar izquierda 0 1 0
       digitalWrite(TS1,HIGH);
       digitalWrite(TS2,LOW);
-      delay(1000);                //control de giro Izquierdo
-      lecSens();               //leer sensores
+      digitalWrite(TS3,HIGH);
+      delay(3000);
       return;
     } 
 }
 
 void lecSens(){
-    Serial.println("Leer Sensores");
+    //Serial.println("Leer Sensores");
     //Sección para asignar valores de los sensores y cuantizarlos
+    digitalWrite(TS3,LOW);
+    lecObsMike();
     objP = visionPelotas();                                                //Busca centro de pelota, 0-centro,1-derecha,2-izquierda, 3-sin objetivo
-    obs = lecObs();                       //
-    rva[0] = lecturaColor('r');
-    rva[1] = lecturaColor('v');
-    rva[2] = lecturaColor('a');
+    //lecObs();                                           //
+    lecturaColor();
+    if((rva[0] <= (rvaExterior[0] + 25) && rva[0] >= (rvaExterior[0] - 25)) && (rva[1] <= (rvaExterior[1] + 25) && rva[1] >= (rvaExterior[1] - 25)) && (rva[2] <= (rvaExterior[2] + 25) && rva[2] >= (rvaExterior[2] - 25))){
+      limC = true;
+    }
+    else{
+      limC = false;
+    }
+    
     Serial.print("Obs: ");
     Serial.print(obs);
+    Serial.print(" ObjP:");
+    Serial.print(objP);
     Serial.print(" limC:" );
     Serial.print(limC);
     Serial.print(" Nav: ");
     Serial.print(Nav);
     Serial.print(" evObs: ");
     Serial.println(evObs);
+    Serial.print("TS3: ");
+    Serial.print(digitalRead(TS3));
+    Serial.print(" TS2: ");
+    Serial.print(digitalRead(TS2));
+    Serial.print(" TS1: ");
+    Serial.print(digitalRead(TS1));
+    Serial.print(" TS0: ");
+    Serial.println(digitalRead(TS0));
 }
 
 void accessPointInit(){
@@ -206,8 +233,9 @@ void accessPointInit(){
 }
 
 int visionPelotas(){
-  Serial.println("Buscando Pelotas");
+  //Serial.println("Buscando Pelotas");
   int ball;
+  Conexion:
   WiFiClient client = server.available();     // Listen for incoming clients
 
   if (client) {                             // If a new client connects,
@@ -265,13 +293,18 @@ int visionPelotas(){
   }
   else{
     Serial.println("No hay coneccion python");
-    ball = 3;
+    digitalWrite(TS0,LOW);          //Detener motores 0 0 0
+    digitalWrite(TS1,LOW);
+    digitalWrite(TS2,LOW);
+    digitalWrite(TS3,HIGH);
+    goto Conexion;  
+    ball = 3;                                           //
   }
   return ball;
 } 
 
-int lecObs(){
-  Serial.println("Buscando Obstáculos");
+void lecObs(){
+  //Serial.println("Buscando Obstáculos");
   int pose;
   // ENVIAR PULSO DE DISPARO EN EL PIN "TRIGGER"
   digitalWrite(pintrigger, LOW);
@@ -285,15 +318,26 @@ int lecObs(){
   unsigned int y2 = 0;
   unsigned int y3 = 0;
 
-  /*b00:
+  
+  int espera = 0;
+
   Serial.println("Buscando Obstáculos b00");
-  if(PE1 == LOW && PE2 == LOW){
+  b00:
+  if(PE1 == LOW && PE2 == LOW && PE3==LOW){
     delayMicroseconds(1);
+    //Serial.print(".");
+    espera = espera+1;
+    if(espera > 1000){
+      return;
+    }
+    
     goto b00;
-  }*/
+  }
+
+  Serial.println("ESPERA");
 
   bi:
-  Serial.println("Buscando Obstáculos bi");
+  //Serial.println("Buscando Obstáculos bi");
     if(PE1 == HIGH){
       y1++;
     }
@@ -303,6 +347,7 @@ int lecObs(){
     if(PE3 == HIGH){
       y3++;
     }
+    
     /*
     if(PE4 == HIGH){
       y4++;
@@ -317,42 +362,114 @@ int lecObs(){
   delayMicroseconds(1);
   goto bi;
   bf:
-  Serial.println("Buscando Obstáculos bf");
+  //Serial.println("Buscando Obstáculos bf");
 
   //Por calibraciÃ³n, 0.5 fue el mejor valor, al menos de manera preliminar... 
-  distancia1 = y1 * 0.5;
-  distancia2 = y2 * 0.5;
-  distancia3 = y3 * 0.5; 
+  distancia1 = y1 / 300;
+  distancia2 = y2 / 300;
+  distancia3 = y3 / 300; 
  
   //Serial
   Serial.print(distancia1);
   Serial.print(" --cm[1] ");
   Serial.print(distancia2);
-  Serial.println(" --cm[2] ");
+  Serial.print(" --cm[2] ");
+  Serial.print(distancia3);
+  Serial.println(" --cm[3] ");
   delay(3);
-  return 0;
+  
+  if(distancia1<30&&distancia1>0){
+    obs=2;
+    return;
+  }
+  if(distancia3<30&&distancia3>0){
+    obs=1;
+    return;
+  }
+  if(distancia2<70&&distancia2>0){
+    obs=3;
+    return;
+  }
+  else{
+    obs=0;
+  }
 }
 
-int lecturaColor(char col){
-   Serial.println("Leyendo Cancha");
+void lecObsMike(){
+
+  long t; //timepo que demora en llegar el eco
+  long d1,d2,d3; //distancia en centimetros
+
+  digitalWrite(pintrigger, HIGH);
+  delayMicroseconds(10);          //Enviamos un pulso de 10us
+  digitalWrite(pintrigger, LOW);
+  
+  t = pulseIn(pe1, HIGH); //obtenemos el ancho del pulso
+  d1 = t/59;             //escalamos el tiempo a una distancia en cm
+  //if(d<20||d>100){
+  Serial.print("Distancia1: ");
+  Serial.print(d1);      //Enviamos serialmente el valor de la distancia
+  Serial.print("cm");
+  Serial.println();
+
+  digitalWrite(pintrigger, HIGH);
+  delayMicroseconds(10);          //Enviamos un pulso de 10us
+  digitalWrite(pintrigger, LOW);
+  t = pulseIn(pe2, HIGH); //obtenemos el ancho del pulso
+  d2 = t/59;             //escalamos el tiempo a una distancia en cm
+  //if(d<20||d>100){
+  Serial.print("Distancia2: ");
+  Serial.print(d2);      //Enviamos serialmente el valor de la distancia
+  Serial.print("cm");
+  Serial.println();
+
+  digitalWrite(pintrigger, HIGH);
+  delayMicroseconds(10);          //Enviamos un pulso de 10us
+  digitalWrite(pintrigger, LOW);
+  t = pulseIn(pe3, HIGH); //obtenemos el ancho del pulso
+  d3 = t/59;             //escalamos el tiempo a una distancia en cm
+  //if(d<20||d>100){
+  Serial.print("Distancia3: ");
+  Serial.print(d3);      //Enviamos serialmente el valor de la distancia
+  Serial.print("cm");
+  Serial.println();
+  //delay(100);
+  if(d1<30&&d1>0){
+    obs=2;
+    return;
+  }
+  if(d3<30&&d3>0){
+    obs=1;
+    return;
+  }
+  if(d2<20&&d2>0){
+    obs=3;
+    return;
+  }
+  else{
+    obs=0;
+  }
+  //}          //Hacemos una pausa de 100ms
+}
+
+void lecturaColor(){
+   //Serial.println("Leyendo Cancha");
    //rojo
-   if(col == 'r'){
       digitalWrite(S2,LOW);     // establece fotodiodos
       digitalWrite(S3,LOW);     // con filtro rojo
-   }
-   //verde
-   if(col == 'v'){
+      rva[0] = pulseIn(salidaTCS, LOW);// obtiene duracion de pulso de salida del sensor
+  //verde
       digitalWrite(S2,HIGH);     // establece fotodiodos
       digitalWrite(S3,HIGH);     // con filtro verde
-   }
+      rva[1] = pulseIn(salidaTCS, LOW);// obtiene duracion de pulso de salida del sensor
    //azul
-   if(col == 'a'){
       digitalWrite(S2,LOW);     // establece fotodiodos
       digitalWrite(S3,HIGH);     // con filtro azul
-   }
- 
-  int R = pulseIn(salidaTCS, LOW); // obtiene duracion de pulso de salida del sensor
-  delay(3);          // demora de 200 mseg 
-
-  return R;
+      rva[2] = pulseIn(salidaTCS, LOW);// obtiene duracion de pulso de salida del sensor
+    Serial.print("R: ");
+    Serial.print(rva[0]);
+    Serial.print(" V: ");
+    Serial.print(rva[1]);
+    Serial.print(" A: ");
+    Serial.println(rva[2]);
 }
